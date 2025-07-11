@@ -1,70 +1,93 @@
-# Getting Started with Create React App
+# e4front - Yu-Gi-Oh! Deck Builder
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+¡Bienvenido a **e4front**!  
+Una aplicación web hecha en **React** que te permite construir mazos de Yu-Gi-Oh! de forma sencilla, con un diseño inspirado en EDOPro/YGOPro.
 
-## Available Scripts
+---
 
-In the project directory, you can run:
+## 🚀 Características principales
 
-### `npm start`
+✅ Búsqueda de cartas en tiempo real usando la **API pública de YGOPRODECK**  
+✅ Filtro por nombre parcial o completo (case insensitive)  
+✅ Visualización con imagen y descripción de cada carta  
+✅ Deck Builder con soporte para:  
+- Main Deck (40-60 cartas)  
+- Extra Deck (0-15 cartas)  
+- Side Deck (0-15 cartas)  
+✅ Límite de 3 copias totales por carta entre todos los decks  
+✅ Guardado automático en **localStorage**  
+✅ Soporte para múltiples mazos con:  
+- Crear  
+- Renombrar  
+- Guardar  
+- Guardar como  
+✅ Ordenar mazos por tipo y nombre  
+✅ Estilo **Dark Mode** consistente  
+✅ Fondo personalizado y logo  
+✅ Música de fondo opcional (embed de YouTube)
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+---
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## 🖥️ Tecnologías usadas
 
-### `npm test`
+- **ReactJS** (Vite o Create React App)
+- **Bootstrap 5**
+- **JavaScript moderno (ES6)**
+- **CSS personalizado (modo oscuro completo)**
+- **LocalStorage** para persistencia
+- **API pública YGOPRODECK** para obtener datos de cartas
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+---
 
-### `npm run build`
+## 🌐 API utilizada
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+[YGOPRODECK API](https://db.ygoprodeck.com/api-guide/)
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+---
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## 🗂️ Estructura del proyecto
+/public
 
-### `npm run eject`
+background.jpg
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+logo.png
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+/src
+/components
+- DeckBuilder.jsx
+- CardPreview.jsx
+- CardResultItem.jsx
+- DeckRow.jsx
+/styles
+- custom.css
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+App.js
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
 
-## Learn More
+---
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## ⚙️ Cómo usar este proyecto
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### 1️⃣ Clonar el repositorio
 
-### Code Splitting
+```bash
+git clone https://github.com/TUUSUARIO/e4front.git
+cd e4front
+### 2️⃣ Instalar dependencias
+npm install
+### 3️⃣ Ejecutar en desarrollo
+npm start
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+💾 Notas técnicas
+Los decks se guardan automáticamente en localStorage bajo la clave allDecks.
 
-### Analyzing the Bundle Size
+El fondo y el logo se colocan en /public para cargarse globalmente.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+La música de fondo se reproduce de forma oculta mediante un iframe de YouTube (con autoplay).
 
-### Making a Progressive Web App
+Se recomienda reemplazar el video por un archivo local <audio> para mayor control.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+✨ Créditos
+Datos de cartas: YGOPRODECK API
 
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Inspiración visual: EDOPro / YGOPro
