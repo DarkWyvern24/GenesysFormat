@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import CardPreview from './CardPreview';
 import CardResultItem from './CardResultItem';
 import DeckRow from './DeckRow';
@@ -20,7 +20,16 @@ function DeckBuilder() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Load decks from localStorage on mount
+  // ✅ Memorized loadDeck to satisfy ESLint dependencies
+  const loadDeck = useCallback((name, decks = allDecks) => {
+    if (!decks[name]) return;
+    setMainDeck(decks[name].main || []);
+    setExtraDeck(decks[name].extra || []);
+    setSideDeck(decks[name].side || []);
+    setCurrentDeckName(name);
+  }, [allDecks]);
+
+  // ✅ Load from localStorage on mount
   useEffect(() => {
     const stored = localStorage.getItem(LOCAL_KEY);
     if (stored) {
@@ -35,14 +44,14 @@ function DeckBuilder() {
         console.error('Error parsing localStorage:', err);
       }
     }
-  }, []);
+  }, [loadDeck]);
 
-  // Save allDecks to localStorage
+  // ✅ Save allDecks to localStorage on change
   useEffect(() => {
     localStorage.setItem(LOCAL_KEY, JSON.stringify(allDecks));
   }, [allDecks]);
 
-  // Sync current deck to allDecks
+  // ✅ Sync current deck with allDecks
   useEffect(() => {
     if (currentDeckName) {
       setAllDecks(prev => ({
@@ -56,14 +65,7 @@ function DeckBuilder() {
     }
   }, [mainDeck, extraDeck, sideDeck, currentDeckName]);
 
-  const loadDeck = (name, decks = allDecks) => {
-    if (!decks[name]) return;
-    setMainDeck(decks[name].main || []);
-    setExtraDeck(decks[name].extra || []);
-    setSideDeck(decks[name].side || []);
-    setCurrentDeckName(name);
-  };
-
+  // ✅ Deck management functions
   const saveDeck = () => {
     if (!currentDeckName) {
       alert('El deck necesita un nombre.');
@@ -190,13 +192,12 @@ function DeckBuilder() {
       if (a.type > b.type) return 1;
       return a.name.localeCompare(b.name);
     };
-
     setMainDeck([...mainDeck].sort(sortFunction));
     setExtraDeck([...extraDeck].sort(sortFunction));
     setSideDeck([...sideDeck].sort(sortFunction));
   };
 
-  // API fetch
+  // ✅ Fetch cards from API
   useEffect(() => {
     if (search.trim().length < 2) {
       setSearchResults([]);
@@ -204,7 +205,6 @@ function DeckBuilder() {
     }
     setLoading(true);
     setError(null);
-
     fetch(`https://db.ygoprodeck.com/api/v7/cardinfo.php?fname=${encodeURIComponent(search)}`)
       .then(res => {
         if (res.ok) return res.json();
@@ -238,7 +238,7 @@ function DeckBuilder() {
           src="/logo.png"
           alt="Logo"
           style={{
-            maxHeight: '100px',
+            maxHeight: '120px',
             marginBottom: '10px'
           }}
         />
@@ -297,7 +297,6 @@ function DeckBuilder() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
-
             {loading ? (
               <p className="text-center">Cargando...</p>
             ) : error ? (
