@@ -5,10 +5,13 @@ import DeckRow from './DeckRow';
 import '../styles/custom.css';
 
 function DeckBuilder() {
-  const LOCAL_KEY = 'allDecks';
+  const LOCAL_KEY = 'allDecksData';
 
-  const [allDecks, setAllDecks] = useState({});
-  const [currentDeckName, setCurrentDeckName] = useState('');
+  const [deckState, setDeckState] = useState({
+    allDecks: {},
+    currentDeckName: ''
+  });
+
   const [mainDeck, setMainDeck] = useState([]);
   const [extraDeck, setExtraDeck] = useState([]);
   const [sideDeck, setSideDeck] = useState([]);
@@ -20,99 +23,51 @@ function DeckBuilder() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // ✅ Memorized loadDeck to satisfy ESLint dependencies
-  const loadDeck = useCallback((name, decks = allDecks) => {
-    if (!decks[name]) return;
-    setMainDeck(decks[name].main || []);
-    setExtraDeck(decks[name].extra || []);
-    setSideDeck(decks[name].side || []);
-    setCurrentDeckName(name);
-  }, [allDecks]);
+  const { allDecks, currentDeckName } = deckState;
 
-  // ✅ Load from localStorage on mount
+  // ✅ Load decks from localStorage on mount
   useEffect(() => {
     const stored = localStorage.getItem(LOCAL_KEY);
     if (stored) {
       try {
         const parsed = JSON.parse(stored);
-        setAllDecks(parsed);
-        const firstDeck = Object.keys(parsed)[0] || '';
-        if (firstDeck) {
-          loadDeck(firstDeck, parsed);
+        const names = Object.keys(parsed);
+        let firstDeck = names[0] || '';
+
+        setDeckState({
+          allDecks: parsed,
+          currentDeckName: firstDeck
+        });
+
+        if (firstDeck && parsed[firstDeck]) {
+          const deck = parsed[firstDeck];
+          setMainDeck(deck.main || []);
+          setExtraDeck(deck.extra || []);
+          setSideDeck(deck.side || []);
+        } else {
+          setMainDeck([]);
+          setExtraDeck([]);
+          setSideDeck([]);
         }
+
       } catch (err) {
         console.error('Error parsing localStorage:', err);
       }
     }
-  }, [loadDeck]);
+  }, []);
 
   // ✅ Save allDecks to localStorage on change
   useEffect(() => {
     localStorage.setItem(LOCAL_KEY, JSON.stringify(allDecks));
   }, [allDecks]);
 
-  // ✅ Sync current deck with allDecks
-  useEffect(() => {
-    if (currentDeckName) {
-      setAllDecks(prev => ({
-        ...prev,
-        [currentDeckName]: {
-          main: mainDeck,
-          extra: extraDeck,
-          side: sideDeck
-        }
-      }));
-    }
-  }, [mainDeck, extraDeck, sideDeck, currentDeckName]);
-
-  // ✅ Deck management functions
-  const saveDeck = () => {
-    if (!currentDeckName) {
-      alert('El deck necesita un nombre.');
-      return;
-    }
-    setAllDecks(prev => ({
-      ...prev,
-      [currentDeckName]: {
-        main: mainDeck,
-        extra: extraDeck,
-        side: sideDeck
-      }
-    }));
-    alert('¡Deck guardado!');
-  };
-
-  const saveAsDeck = () => {
-    const name = prompt('Nombre para el nuevo deck:');
-    if (!name) return;
-    if (allDecks[name]) {
-      alert('Ya existe un deck con ese nombre.');
-      return;
-    }
-    setAllDecks(prev => ({
-      ...prev,
-      [name]: {
-        main: mainDeck,
-        extra: extraDeck,
-        side: sideDeck
-      }
-    }));
-    setCurrentDeckName(name);
-  };
-
-  const renameDeck = () => {
-    const newName = prompt('Nuevo nombre del deck:', currentDeckName);
-    if (!newName || newName === currentDeckName) return;
-    if (allDecks[newName]) {
-      alert('Ya existe un deck con ese nombre.');
-      return;
-    }
-    const updatedDecks = { ...allDecks };
-    updatedDecks[newName] = updatedDecks[currentDeckName];
-    delete updatedDecks[currentDeckName];
-    setAllDecks(updatedDecks);
-    setCurrentDeckName(newName);
-  };
+  const loadDeck = useCallback((name, decks = allDecks) => {
+    if (!decks[name]) return;
+    setMainDeck(decks[name].main || []);
+    setExtraDeck(decks[name].extra || []);
+    setSideDeck(decks[name].side || []);
+    setDeckState(prev => ({ ...prev, currentDeckName: name }));
+  }, [allDecks]);
 
   const createNewDeck = () => {
     if (!newDeckName.trim()) {
@@ -123,22 +78,160 @@ function DeckBuilder() {
       alert('Ya existe un deck con ese nombre.');
       return;
     }
+
+    if (!window.confirm(`¿Crear el deck "${newDeckName}" con las cartas actuales?`)) {
+      return;
+    }
+
     const updatedDecks = {
       ...allDecks,
-      [newDeckName]: { main: [], extra: [], side: [] }
+      [newDeckName]: {
+        main: mainDeck,
+        extra: extraDeck,
+        side: sideDeck
+      }
     };
-    setAllDecks(updatedDecks);
-    loadDeck(newDeckName, updatedDecks);
+
+    localStorage.setItem(LOCAL_KEY, JSON.stringify(updatedDecks));
+    setDeckState({
+      allDecks: updatedDecks,
+      currentDeckName: newDeckName
+    });
     setNewDeckName('');
+    alert('¡Nuevo deck creado con el progreso actual!');
   };
 
-  const countTotalCopies = (cardId) => {
-    return (
-      mainDeck.filter(c => c.id === cardId).length +
-      extraDeck.filter(c => c.id === cardId).length +
-      sideDeck.filter(c => c.id === cardId).length
-    );
+  const saveDeck = () => {
+    if (!currentDeckName) {
+      alert('No hay ningún deck cargado para guardar.');
+      return;
+    }
+
+    if (!window.confirm(`¿Guardar cambios en "${currentDeckName}"?`)) {
+      return;
+    }
+
+    const updatedDecks = {
+      ...allDecks,
+      [currentDeckName]: {
+        main: mainDeck,
+        extra: extraDeck,
+        side: sideDeck
+      }
+    };
+
+    localStorage.setItem(LOCAL_KEY, JSON.stringify(updatedDecks));
+    setDeckState(prev => ({
+      ...prev,
+      allDecks: updatedDecks
+    }));
+    alert('¡Deck guardado!');
   };
+
+  const saveAsDeck = () => {
+    if (!currentDeckName) {
+      alert('Debes tener un deck abierto para usar Guardar como.');
+      return;
+    }
+
+    const name = prompt('Nombre para la copia del deck:');
+    if (!name) return;
+    if (allDecks[name]) {
+      alert('Ya existe un deck con ese nombre.');
+      return;
+    }
+
+    if (!window.confirm(`¿Guardar una copia como "${name}"?`)) {
+      return;
+    }
+
+    const updatedDecks = {
+      ...allDecks,
+      [name]: {
+        main: mainDeck,
+        extra: extraDeck,
+        side: sideDeck
+      }
+    };
+
+    localStorage.setItem(LOCAL_KEY, JSON.stringify(updatedDecks));
+    setDeckState({
+      allDecks: updatedDecks,
+      currentDeckName: name
+    });
+    alert(`¡Deck guardado como "${name}"!`);
+  };
+
+  const renameDeck = () => {
+    if (!currentDeckName) {
+      alert('No hay ningún deck cargado para renombrar.');
+      return;
+    }
+
+    const newName = prompt('Nuevo nombre del deck:', currentDeckName);
+    if (!newName || newName === currentDeckName) return;
+    if (allDecks[newName]) {
+      alert('Ya existe un deck con ese nombre.');
+      return;
+    }
+
+    if (!window.confirm(`¿Renombrar "${currentDeckName}" a "${newName}"?`)) {
+      return;
+    }
+
+    const updatedDecks = { ...allDecks };
+    updatedDecks[newName] = updatedDecks[currentDeckName];
+    delete updatedDecks[currentDeckName];
+
+    localStorage.setItem(LOCAL_KEY, JSON.stringify(updatedDecks));
+    setDeckState({
+      allDecks: updatedDecks,
+      currentDeckName: newName
+    });
+    alert(`¡Deck renombrado a "${newName}"!`);
+  };
+
+  const deleteDeck = () => {
+    if (!currentDeckName) {
+      alert('No hay ningún deck seleccionado para borrar.');
+      return;
+    }
+
+    if (!window.confirm(`¿Seguro que quieres borrar el deck "${currentDeckName}"? Esta acción no se puede deshacer.`)) {
+      return;
+    }
+
+    const updatedDecks = { ...allDecks };
+    delete updatedDecks[currentDeckName];
+
+    const remainingNames = Object.keys(updatedDecks);
+    const newCurrentName = remainingNames[0] || '';
+
+    localStorage.setItem(LOCAL_KEY, JSON.stringify(updatedDecks));
+    setDeckState({
+      allDecks: updatedDecks,
+      currentDeckName: newCurrentName
+    });
+
+    if (newCurrentName && updatedDecks[newCurrentName]) {
+      const deck = updatedDecks[newCurrentName];
+      setMainDeck(deck.main || []);
+      setExtraDeck(deck.extra || []);
+      setSideDeck(deck.side || []);
+    } else {
+      setMainDeck([]);
+      setExtraDeck([]);
+      setSideDeck([]);
+    }
+
+    alert(`¡Deck eliminado!`);
+  };
+
+  const countTotalCopies = (cardId) => (
+    mainDeck.filter(c => c.id === cardId).length +
+    extraDeck.filter(c => c.id === cardId).length +
+    sideDeck.filter(c => c.id === cardId).length
+  );
 
   const isExtraType = (type) => {
     if (!type) return false;
@@ -197,7 +290,6 @@ function DeckBuilder() {
     setSideDeck([...sideDeck].sort(sortFunction));
   };
 
-  // ✅ Fetch cards from API
   useEffect(() => {
     if (search.trim().length < 2) {
       setSearchResults([]);
@@ -246,12 +338,10 @@ function DeckBuilder() {
       </div>
 
       <div className="row">
-        {/* Preview Izquierda */}
         <div className="col-md-3 mb-3">
           <CardPreview card={selectedCard} />
         </div>
 
-        {/* Editor de Deck al Centro */}
         <div className="col-md-6 mb-3">
           <div className="p-2 rounded bg-dark">
             <div className="d-flex flex-wrap gap-2 mb-2">
@@ -268,6 +358,7 @@ function DeckBuilder() {
               <button className="btn btn-tech btn-sm" onClick={saveAsDeck}>Guardar como</button>
               <button className="btn btn-tech btn-sm" onClick={renameDeck}>Renombrar</button>
               <button className="btn btn-tech btn-sm" onClick={sortDeck}>Ordenar</button>
+              <button className="btn btn-danger btn-sm" onClick={deleteDeck}>Borrar</button>
             </div>
 
             <div className="d-flex flex-wrap gap-2 mb-2">
@@ -287,7 +378,6 @@ function DeckBuilder() {
           </div>
         </div>
 
-        {/* Buscador Derecha */}
         <div className="col-md-3 mb-3">
           <div className="results-container">
             <input
