@@ -42,15 +42,21 @@ function DeckBuilder() {
 
         if (firstDeck && parsed[firstDeck]) {
           const deck = parsed[firstDeck];
-          setMainDeck(deck.main || []);
-          setExtraDeck(deck.extra || []);
-          setSideDeck(deck.side || []);
+          // 🔎 Filtrar Link y Péndulo al cargar
+          const filterDeck = (arr) =>
+            (arr || []).filter(c => {
+              const type = c.type?.toLowerCase() || '';
+              return !type.includes('link') && !type.includes('pendulum');
+            });
+
+          setMainDeck(filterDeck(deck.main));
+          setExtraDeck(filterDeck(deck.extra));
+          setSideDeck(filterDeck(deck.side));
         } else {
           setMainDeck([]);
           setExtraDeck([]);
           setSideDeck([]);
         }
-
       } catch (err) {
         console.error('Error parsing localStorage:', err);
       }
@@ -64,9 +70,16 @@ function DeckBuilder() {
 
   const loadDeck = useCallback((name, decks = allDecks) => {
     if (!decks[name]) return;
-    setMainDeck(decks[name].main || []);
-    setExtraDeck(decks[name].extra || []);
-    setSideDeck(decks[name].side || []);
+
+    const filterDeck = (arr) =>
+      (arr || []).filter(c => {
+        const type = c.type?.toLowerCase() || '';
+        return !type.includes('link') && !type.includes('pendulum');
+      });
+
+    setMainDeck(filterDeck(decks[name].main));
+    setExtraDeck(filterDeck(decks[name].extra));
+    setSideDeck(filterDeck(decks[name].side));
     setDeckState(prev => ({ ...prev, currentDeckName: name }));
   }, [allDecks]);
 
@@ -300,7 +313,7 @@ function DeckBuilder() {
     }, 0);
   };
 
-  // 🔎 Buscador con debounce y abort controller
+  // 🔎 Buscador con debounce y filtro de Link/Péndulo
   useEffect(() => {
     if (search.trim().length < 2) {
       setSearchResults([]);
@@ -322,16 +335,21 @@ function DeckBuilder() {
           throw new Error('Error en la API');
         })
         .then(data => {
-          setSearchResults(data.data || []);
+          // 🔎 Filtrar Link y Péndulo de resultados
+          const filtered = (data.data || []).filter(card => {
+            const type = card.type?.toLowerCase() || '';
+            return !type.includes('link') && !type.includes('pendulum');
+          });
+          setSearchResults(filtered);
           setLoading(false);
         })
         .catch(err => {
-          if (err.name === 'AbortError') return; // ignorar si fue cancelado
+          if (err.name === 'AbortError') return;
           console.error(err);
           setError('Error al conectar con la API.');
           setLoading(false);
         });
-    }, 300); // espera 300ms después de dejar de escribir
+    }, 300);
 
     return () => {
       clearTimeout(delayDebounce);
