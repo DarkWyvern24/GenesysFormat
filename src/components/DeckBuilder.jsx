@@ -363,7 +363,7 @@ function DeckBuilder() {
           style={{ maxHeight: '120px', marginBottom: '10px' }}
         />
         <h2>Deck Builder - Genesys Format</h2>
-        <small className="text-muted">by dw24</small>
+        <small className="text-light">by dw24</small>
       </div>
 
       <div className="row">
@@ -426,7 +426,7 @@ function DeckBuilder() {
               <div className="alert alert-danger">{error}</div>
             ) : (
               searchResults.length === 0 ? (
-                <p className="text-muted text-center">No results found.</p>
+                <p className="text-light text-center">No results found.</p>
               ) : (
                 searchResults.map(card => (
                   <CardResultItem
