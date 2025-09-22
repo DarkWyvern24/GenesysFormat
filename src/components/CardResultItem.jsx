@@ -1,9 +1,9 @@
 import React from 'react';
-import CardScores from './CardScores'; // 👈 Importar el diccionario
+import CardScores from './CardScores';
 import '../styles/custom.css';
 
 function CardResultItem({ card, onHover, onAddMainOrExtra, onAddSide }) {
-  const score = CardScores[card.name] || null; // 👈 Verificar si la carta tiene score
+  const score = CardScores[card.name] || null;
 
   return (
     <div className="card-result-item" onMouseEnter={() => onHover(card)}>

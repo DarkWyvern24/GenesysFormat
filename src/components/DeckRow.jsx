@@ -5,10 +5,12 @@ import '../styles/custom.css';
 function DeckRow({ title, cards, onRemove, onHover }) {
   return (
     <div className="deck-row">
-      <div className="deck-row-title">{title} ({cards.length})</div>
+      <div className="deck-row-title">
+        {title} ({cards.length})
+      </div>
       <div className="d-flex flex-wrap justify-content-center gap-2">
         {cards.length === 0 ? (
-          <p className="text-muted">Vacío</p>
+          <p className="text-muted">Empty</p>
         ) : (
           cards.map((card, index) => {
             const score = CardScores[card.name] || null;

@@ -1,12 +1,12 @@
 import React from 'react';
-import CardScores from './CardScores'; // 👈 importamos los puntajes
+import CardScores from './CardScores';
 import '../styles/custom.css';
 
 function CardPreview({ card }) {
   if (!card) {
     return (
       <div className="card-preview">
-        <p className="text-muted">Selecciona o pasa el mouse por una carta para verla aquí.</p>
+        <p className="text-muted">Select or hover over a card to preview it here.</p>
       </div>
     );
   }
@@ -15,7 +15,7 @@ function CardPreview({ card }) {
   const atk = card.atk != null ? `ATK: ${card.atk}` : '';
   const def = card.def != null ? ` / DEF: ${card.def}` : '';
   const level = card.level ? `★${card.level}` : '';
-  const score = CardScores[card.name] || null; // 👈 buscamos el score
+  const score = CardScores[card.name] || null;
 
   return (
     <div className="card-preview">
