@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import CardPreview from './CardPreview';
 import CardResultItem from './CardResultItem';
 import DeckRow from './DeckRow';
+import CardScores from './CardScores';
 import '../styles/custom.css';
 
 function DeckBuilder() {
@@ -290,28 +291,52 @@ function DeckBuilder() {
     setSideDeck([...sideDeck].sort(sortFunction));
   };
 
+  // 👉 Función de score
+  const getDeckScore = () => {
+    const allCards = [...mainDeck, ...extraDeck, ...sideDeck];
+    return allCards.reduce((sum, card) => {
+      const score = CardScores[card.name] || 0;
+      return sum + score;
+    }, 0);
+  };
+
+  // 🔎 Buscador con debounce y abort controller
   useEffect(() => {
     if (search.trim().length < 2) {
       setSearchResults([]);
       return;
     }
-    setLoading(true);
-    setError(null);
-    fetch(`https://db.ygoprodeck.com/api/v7/cardinfo.php?fname=${encodeURIComponent(search)}`)
-      .then(res => {
-        if (res.ok) return res.json();
-        if (res.status === 400) return { data: [] };
-        throw new Error('Error en la API');
-      })
-      .then(data => {
-        setSearchResults(data.data || []);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error(err);
-        setError('Error al conectar con la API.');
-        setLoading(false);
-      });
+
+    const controller = new AbortController();
+    const delayDebounce = setTimeout(() => {
+      setLoading(true);
+      setError(null);
+
+      fetch(
+        `https://db.ygoprodeck.com/api/v7/cardinfo.php?fname=${encodeURIComponent(search)}`,
+        { signal: controller.signal }
+      )
+        .then(res => {
+          if (res.ok) return res.json();
+          if (res.status === 400) return { data: [] };
+          throw new Error('Error en la API');
+        })
+        .then(data => {
+          setSearchResults(data.data || []);
+          setLoading(false);
+        })
+        .catch(err => {
+          if (err.name === 'AbortError') return; // ignorar si fue cancelado
+          console.error(err);
+          setError('Error al conectar con la API.');
+          setLoading(false);
+        });
+    }, 300); // espera 300ms después de dejar de escribir
+
+    return () => {
+      clearTimeout(delayDebounce);
+      controller.abort();
+    };
   }, [search]);
 
   return (
@@ -370,6 +395,11 @@ function DeckBuilder() {
                 onChange={(e) => setNewDeckName(e.target.value)}
               />
               <button className="btn btn-outline-success btn-sm" onClick={createNewDeck}>Crear</button>
+            </div>
+
+            {/* Puntaje total */}
+            <div className="text-center text-light mb-2">
+              Puntaje total del mazo: {getDeckScore()}
             </div>
 
             <DeckRow title="Main Deck" cards={mainDeck} onRemove={(i) => removeFromDeck(mainDeck, i)} onHover={setSelectedCard} />
