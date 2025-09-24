@@ -26,13 +26,6 @@ function DeckBuilder() {
 
   const { allDecks, currentDeckName } = deckState;
 
-  // ✅ Helper to filter out Link, Pendulum, Skill
-  const filterInvalidCards = (arr) =>
-    (arr || []).filter(c => {
-      const type = c.type?.toLowerCase() || '';
-      return !type.includes('link') && !type.includes('pendulum') && !type.includes('skill');
-    });
-
   // ✅ Load decks from localStorage on mount
   useEffect(() => {
     const stored = localStorage.getItem(LOCAL_KEY);
@@ -49,14 +42,15 @@ function DeckBuilder() {
 
         if (firstDeck && parsed[firstDeck]) {
           const deck = parsed[firstDeck];
-          setMainDeck(filterInvalidCards(deck.main));
-          setExtraDeck(filterInvalidCards(deck.extra));
-          setSideDeck(filterInvalidCards(deck.side));
+          setMainDeck(deck.main || []);
+          setExtraDeck(deck.extra || []);
+          setSideDeck(deck.side || []);
         } else {
           setMainDeck([]);
           setExtraDeck([]);
           setSideDeck([]);
         }
+
       } catch (err) {
         console.error('Error parsing localStorage:', err);
       }
@@ -70,23 +64,23 @@ function DeckBuilder() {
 
   const loadDeck = useCallback((name, decks = allDecks) => {
     if (!decks[name]) return;
-    setMainDeck(filterInvalidCards(decks[name].main));
-    setExtraDeck(filterInvalidCards(decks[name].extra));
-    setSideDeck(filterInvalidCards(decks[name].side));
+    setMainDeck(decks[name].main || []);
+    setExtraDeck(decks[name].extra || []);
+    setSideDeck(decks[name].side || []);
     setDeckState(prev => ({ ...prev, currentDeckName: name }));
   }, [allDecks]);
 
   const createNewDeck = () => {
     if (!newDeckName.trim()) {
-      alert('Enter a name for the new deck.');
+      alert('Ponle un nombre al nuevo deck.');
       return;
     }
     if (allDecks[newDeckName]) {
-      alert('Deck with that name already exists.');
+      alert('Ya existe un deck con ese nombre.');
       return;
     }
 
-    if (!window.confirm(`Create deck "${newDeckName}" with current cards?`)) {
+    if (!window.confirm(`¿Crear el deck "${newDeckName}" con las cartas actuales?`)) {
       return;
     }
 
@@ -105,16 +99,16 @@ function DeckBuilder() {
       currentDeckName: newDeckName
     });
     setNewDeckName('');
-    alert('New deck created.');
+    alert('¡Nuevo deck creado con el progreso actual!');
   };
 
   const saveDeck = () => {
     if (!currentDeckName) {
-      alert('No deck loaded to save.');
+      alert('No hay ningún deck cargado para guardar.');
       return;
     }
 
-    if (!window.confirm(`Save changes to "${currentDeckName}"?`)) {
+    if (!window.confirm(`¿Guardar cambios en "${currentDeckName}"?`)) {
       return;
     }
 
@@ -132,23 +126,23 @@ function DeckBuilder() {
       ...prev,
       allDecks: updatedDecks
     }));
-    alert('Deck saved.');
+    alert('¡Deck guardado!');
   };
 
   const saveAsDeck = () => {
     if (!currentDeckName) {
-      alert('No deck loaded to copy.');
+      alert('Debes tener un deck abierto para usar Guardar como.');
       return;
     }
 
-    const name = prompt('Name for the copy of the deck:');
+    const name = prompt('Nombre para la copia del deck:');
     if (!name) return;
     if (allDecks[name]) {
-      alert('Deck with that name already exists.');
+      alert('Ya existe un deck con ese nombre.');
       return;
     }
 
-    if (!window.confirm(`Save a copy as "${name}"?`)) {
+    if (!window.confirm(`¿Guardar una copia como "${name}"?`)) {
       return;
     }
 
@@ -166,23 +160,23 @@ function DeckBuilder() {
       allDecks: updatedDecks,
       currentDeckName: name
     });
-    alert(`Deck saved as "${name}".`);
+    alert(`¡Deck guardado como "${name}"!`);
   };
 
   const renameDeck = () => {
     if (!currentDeckName) {
-      alert('No deck loaded to rename.');
+      alert('No hay ningún deck cargado para renombrar.');
       return;
     }
 
-    const newName = prompt('New deck name:', currentDeckName);
+    const newName = prompt('Nuevo nombre del deck:', currentDeckName);
     if (!newName || newName === currentDeckName) return;
     if (allDecks[newName]) {
-      alert('Deck with that name already exists.');
+      alert('Ya existe un deck con ese nombre.');
       return;
     }
 
-    if (!window.confirm(`Rename "${currentDeckName}" to "${newName}"?`)) {
+    if (!window.confirm(`¿Renombrar "${currentDeckName}" a "${newName}"?`)) {
       return;
     }
 
@@ -195,16 +189,16 @@ function DeckBuilder() {
       allDecks: updatedDecks,
       currentDeckName: newName
     });
-    alert(`Deck renamed to "${newName}".`);
+    alert(`¡Deck renombrado a "${newName}"!`);
   };
 
   const deleteDeck = () => {
     if (!currentDeckName) {
-      alert('No deck selected to delete.');
+      alert('No hay ningún deck seleccionado para borrar.');
       return;
     }
 
-    if (!window.confirm(`Delete deck "${currentDeckName}"? This cannot be undone.`)) {
+    if (!window.confirm(`¿Seguro que quieres borrar el deck "${currentDeckName}"? Esta acción no se puede deshacer.`)) {
       return;
     }
 
@@ -222,16 +216,26 @@ function DeckBuilder() {
 
     if (newCurrentName && updatedDecks[newCurrentName]) {
       const deck = updatedDecks[newCurrentName];
-      setMainDeck(filterInvalidCards(deck.main));
-      setExtraDeck(filterInvalidCards(deck.extra));
-      setSideDeck(filterInvalidCards(deck.side));
+      setMainDeck(deck.main || []);
+      setExtraDeck(deck.extra || []);
+      setSideDeck(deck.side || []);
     } else {
       setMainDeck([]);
       setExtraDeck([]);
       setSideDeck([]);
     }
 
-    alert('Deck deleted.');
+    alert(`¡Deck eliminado!`);
+  };
+
+  // ✅ Limpiar mazo (nuevo botón)
+  const clearDeck = () => {
+    if (!window.confirm("¿Seguro que quieres limpiar todas las cartas del deck actual?")) {
+      return;
+    }
+    setMainDeck([]);
+    setExtraDeck([]);
+    setSideDeck([]);
   };
 
   const countTotalCopies = (cardId) => (
@@ -246,20 +250,29 @@ function DeckBuilder() {
     return ['fusion', 'synchro', 'xyz', 'link'].some(t => lower.includes(t));
   };
 
+  const isBannedType = (card) => {
+    const type = (card.type || '').toLowerCase();
+    return type.includes('link') || type.includes('pendulum');
+  };
+
   const addToMainOrExtra = (card) => {
+    if (isBannedType(card)) {
+      alert('No se pueden jugar cartas Link ni Péndulo.');
+      return;
+    }
     if (countTotalCopies(card.id) >= 3) {
-      alert('Max 3 copies allowed.');
+      alert('No puedes tener más de 3 copias.');
       return;
     }
     if (isExtraType(card.type)) {
       if (extraDeck.length >= 15) {
-        alert('Extra Deck full.');
+        alert('Extra Deck lleno.');
         return;
       }
       setExtraDeck([...extraDeck, card]);
     } else {
       if (mainDeck.length >= 60) {
-        alert('Main Deck full.');
+        alert('Main Deck lleno.');
         return;
       }
       setMainDeck([...mainDeck, card]);
@@ -267,12 +280,16 @@ function DeckBuilder() {
   };
 
   const addToSide = (card) => {
+    if (isBannedType(card)) {
+      alert('No se pueden jugar cartas Link ni Péndulo.');
+      return;
+    }
     if (countTotalCopies(card.id) >= 3) {
-      alert('Max 3 copies allowed.');
+      alert('No puedes tener más de 3 copias.');
       return;
     }
     if (sideDeck.length >= 15) {
-      alert('Side Deck full.');
+      alert('Side Deck lleno.');
       return;
     }
     setSideDeck([...sideDeck, card]);
@@ -305,7 +322,7 @@ function DeckBuilder() {
     }, 0);
   };
 
-  // 🔎 Search with debounce and filter
+  // 🔎 Buscador con debounce
   useEffect(() => {
     if (search.trim().length < 2) {
       setSearchResults([]);
@@ -324,17 +341,16 @@ function DeckBuilder() {
         .then(res => {
           if (res.ok) return res.json();
           if (res.status === 400) return { data: [] };
-          throw new Error('API error');
+          throw new Error('Error en la API');
         })
         .then(data => {
-          const filtered = filterInvalidCards(data.data || []);
-          setSearchResults(filtered);
+          setSearchResults(data.data || []);
           setLoading(false);
         })
         .catch(err => {
           if (err.name === 'AbortError') return;
           console.error(err);
-          setError('Error connecting to API.');
+          setError('Error al conectar con la API.');
           setLoading(false);
         });
     }, 300);
@@ -360,10 +376,12 @@ function DeckBuilder() {
         <img
           src="/logo.png"
           alt="Logo"
-          style={{ maxHeight: '120px', marginBottom: '10px' }}
+          style={{
+            maxHeight: '120px',
+            marginBottom: '10px'
+          }}
         />
-        <h2>Deck Builder - Genesys Format</h2>
-        <small className="text-light">by dw24</small>
+        <h2>Genesys Format Deck Builder</h2>
       </div>
 
       <div className="row">
@@ -383,26 +401,28 @@ function DeckBuilder() {
                   <option key={name} value={name}>{name}</option>
                 ))}
               </select>
-              <button className="btn btn-tech btn-sm" onClick={saveDeck}>Save</button>
-              <button className="btn btn-tech btn-sm" onClick={saveAsDeck}>Save As</button>
-              <button className="btn btn-tech btn-sm" onClick={renameDeck}>Rename</button>
-              <button className="btn btn-tech btn-sm" onClick={sortDeck}>Sort</button>
-              <button className="btn btn-danger btn-sm" onClick={deleteDeck}>Delete</button>
+              <button className="btn btn-tech btn-sm" onClick={saveDeck}>Guardar</button>
+              <button className="btn btn-tech btn-sm" onClick={saveAsDeck}>Guardar como</button>
+              <button className="btn btn-tech btn-sm" onClick={renameDeck}>Renombrar</button>
+              <button className="btn btn-tech btn-sm" onClick={sortDeck}>Ordenar</button>
+              <button className="btn btn-warning btn-sm" onClick={clearDeck}>Limpiar</button>
+              <button className="btn btn-danger btn-sm" onClick={deleteDeck}>Borrar</button>
             </div>
 
             <div className="d-flex flex-wrap gap-2 mb-2">
               <input
                 type="text"
                 className="form-control form-control-sm"
-                placeholder="New deck name"
+                placeholder="Nombre del nuevo deck"
                 value={newDeckName}
                 onChange={(e) => setNewDeckName(e.target.value)}
               />
-              <button className="btn btn-outline-success btn-sm" onClick={createNewDeck}>Create</button>
+              <button className="btn btn-outline-success btn-sm" onClick={createNewDeck}>Crear</button>
             </div>
 
+            {/* Puntaje total */}
             <div className="text-center text-light mb-2">
-              Total deck score: {getDeckScore()}
+              Puntaje total del mazo: {getDeckScore()}
             </div>
 
             <DeckRow title="Main Deck" cards={mainDeck} onRemove={(i) => removeFromDeck(mainDeck, i)} onHover={setSelectedCard} />
@@ -416,17 +436,17 @@ function DeckBuilder() {
             <input
               type="text"
               className="form-control form-control-sm mb-2"
-              placeholder="Search cards..."
+              placeholder="Buscar cartas..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
             {loading ? (
-              <p className="text-center">Loading...</p>
+              <p className="text-center">Cargando...</p>
             ) : error ? (
               <div className="alert alert-danger">{error}</div>
             ) : (
               searchResults.length === 0 ? (
-                <p className="text-light text-center">No results found.</p>
+                <p className="text-muted text-center">No se encontraron resultados.</p>
               ) : (
                 searchResults.map(card => (
                   <CardResultItem
